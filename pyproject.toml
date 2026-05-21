@@ -1,0 +1,142 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aspect-hpc-ai-monitor"
+version = "0.1.0"
+description = "AI-powered monitoring and failure diagnosis for ASPECT HPC simulations"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Amarjyoti Baruah", email = "amarjyoti.baruah@example.com"}
+]
+keywords = [
+    "geodynamics",
+    "aspect",
+    "hpc",
+    "simulation",
+    "monitoring",
+    "failure-detection",
+    "ai",
+    "machine-learning"
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+    "Topic :: System :: Monitoring"
+]
+
+[project.urls]
+Repository = "https://github.com/amarjyotibaruah/aspect-hpc-ai-monitor"
+Issues = "https://github.com/amarjyotibaruah/aspect-hpc-ai-monitor/issues"
+Documentation = "https://github.com/amarjyotibaruah/aspect-hpc-ai-monitor#readme"
+
+# Core dependencies
+[project.dependencies]
+pydantic = ">=2.0"
+python-dotenv = ">=1.0"
+jinja2 = ">=3.1"
+sqlalchemy = ">=2.0"
+
+# Optional dependencies for future phases
+[project.optional-dependencies]
+hpc = [
+    "paramiko>=3.0",
+    "fabric>=3.0"
+]
+ai = [
+    "openai>=1.0",
+    "azure-ai-openai>=1.0",
+    "tenacity>=8.2"
+]
+notifications = [
+    "slack-sdk>=3.0"
+]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "mypy>=1.0",
+    "ruff>=0.1.0",
+    "black>=23.0",
+    "sphinx>=7.0"
+]
+
+[project.scripts]
+aspect-monitor = "src.cli:main"
+
+# Tool configurations
+[tool.setuptools]
+packages = ["src", "src.parsers", "src.analyzers", "src.reports"]
+
+[tool.black]
+line-length = 100
+target-version = ['py310', 'py311', 'py312']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # Pyflakes
+    "I",    # isort
+    "N",    # pep8-naming
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+]
+ignore = ["E501"]  # Line too long (handled by black)
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --cov=src --cov-report=html --cov-report=term-missing"
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+
+[tool.coverage.run]
+branch = true
+source = ["src"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "raise AssertionError",
+    "raise NotImplementedError"
+]
