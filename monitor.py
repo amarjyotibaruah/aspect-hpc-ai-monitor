@@ -9,6 +9,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 from parsers.aspect_log_parser import AspectLogParser
 from analyzers.simulation_analyzer import SimulationAnalyzer
 from reports.report_generator import ReportGenerator
+from hpc.ssh_connector import SSHConnector
+from hpc.slurm_checker import SlurmChecker
 
 
 def run_local_monitor(log_file):
@@ -51,26 +53,72 @@ def run_local_monitor(log_file):
     print(f"\n✓ Report saved to: {markdown_report_path}")
 
 
+def run_remote_monitor(job_id=None):
+    """Connect to remote HPC cluster and check Slurm job status."""
+
+    print("Connecting to remote HPC cluster...")
+
+    with SSHConnector() as connector:
+        if not connector.check_connection():
+            print("Error: SSH connection check failed.")
+            sys.exit(1)
+
+        print("✓ SSH connection successful")
+
+        username = os.getenv("HPC_USERNAME")
+        checker = SlurmChecker(connector)
+
+        print("\n[1/3] Checking active Slurm jobs...")
+        active_jobs = checker.get_user_jobs(username)
+        print(active_jobs)
+
+        print("\n[2/3] Checking recent Slurm jobs...")
+        recent_jobs = checker.get_recent_jobs(username)
+        print(recent_jobs)
+
+        if job_id:
+            print(f"\n[3/3] Checking job ID: {job_id}")
+            job_status = checker.check_job(job_id)
+            print(job_status)
+        else:
+            print("\n[3/3] No job ID provided. Skipping individual job check.")
+
+    print("\n✓ Remote Slurm check complete")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="ASPECT HPC-AI Monitor"
     )
 
-    parser.add_argument(
-        "mode",
-        choices=["local"],
-        help="Monitoring mode. Currently supported: local"
-    )
+    subparsers = parser.add_subparsers(dest="mode", required=True)
 
-    parser.add_argument(
+    local_parser = subparsers.add_parser(
+        "local",
+        help="Analyze a local ASPECT log file"
+    )
+    local_parser.add_argument(
         "log_file",
         help="Path to local ASPECT log file"
+    )
+
+    remote_parser = subparsers.add_parser(
+        "remote",
+        help="Check remote HPC Slurm job status"
+    )
+    remote_parser.add_argument(
+        "--job-id",
+        help="Optional Slurm job ID to check",
+        default=None
     )
 
     args = parser.parse_args()
 
     if args.mode == "local":
         run_local_monitor(args.log_file)
+
+    elif args.mode == "remote":
+        run_remote_monitor(args.job_id)
 
 
 if __name__ == "__main__":
