@@ -2,6 +2,7 @@
 
 import os
 from openai import OpenAI
+from openai import APIConnectionError, AuthenticationError, RateLimitError
 
 
 class AIDiagnoser:
@@ -10,11 +11,16 @@ class AIDiagnoser:
     def __init__(self):
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
-            raise ValueError("Missing OPENAI_API_KEY environment variable")
+            raise ValueError(
+                "Missing OPENAI_API_KEY environment variable. "
+                "Set it using: export OPENAI_API_KEY='your_key_here'"
+            )
 
         self.client = OpenAI(api_key=api_key)
 
     def diagnose(self, log_summary, issue_summary):
+        """Generate an AI diagnosis from parsed ASPECT log summaries."""
+
         prompt = f"""
 You are an expert in ASPECT geodynamic simulations, HPC workflows, and nonlinear Stokes solver failures.
 
@@ -34,13 +40,41 @@ Please provide:
 5. Short final recommendation
 """
 
-        response = self.client.chat.completions.create(
-            model="gpt-4.1-mini",
-            messages=[
-                {"role": "system", "content": "You are a computational geodynamics and HPC simulation expert."},
-                {"role": "user", "content": prompt},
-            ],
-            temperature=0.2,
-        )
+        try:
+            response = self.client.chat.completions.create(
+                model="gpt-4.1-mini",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "You are a computational geodynamics and HPC "
+                            "simulation expert."
+                        ),
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=0.2,
+            )
 
-        return response.choices[0].message.content
+            return response.choices[0].message.content
+
+        except AuthenticationError:
+            return (
+                "AI diagnosis unavailable: OpenAI authentication failed. "
+                "Check your OPENAI_API_KEY."
+            )
+
+        except RateLimitError:
+            return (
+                "AI diagnosis unavailable: OpenAI API quota or rate limit was reached. "
+                "Check your OpenAI billing, usage limits, or try again later."
+            )
+
+        except APIConnectionError:
+            return (
+                "AI diagnosis unavailable: Could not connect to OpenAI API. "
+                "Check your internet connection."
+            )
+
+        except Exception as error:
+            return f"AI diagnosis unavailable due to unexpected error: {error}"
