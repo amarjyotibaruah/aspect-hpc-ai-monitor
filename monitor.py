@@ -1,11 +1,11 @@
 """Main monitoring workflow script for aspect-hpc-ai-monitor."""
 
-
 import argparse
 import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
+
 from ai.ai_diagnoser import AIDiagnoser
 from parsers.aspect_log_parser import AspectLogParser
 from analyzers.simulation_analyzer import SimulationAnalyzer
@@ -54,6 +54,24 @@ def run_local_monitor(log_file):
     print("\n[4/4] Workflow complete")
     print(f"\n✓ Report saved to: {markdown_report_path}")
 
+    return parser_summary, analyzer_summary, markdown_report_path
+
+
+def run_ai_diagnosis(parser_summary, analyzer_summary):
+    """Run AI diagnosis using parser and analyzer summaries."""
+
+    print("\n[AI] Running AI diagnosis...")
+
+    diagnoser = AIDiagnoser()
+
+    diagnosis = diagnoser.diagnose(
+        log_summary=str(parser_summary),
+        issue_summary=str(analyzer_summary),
+    )
+
+    print("\nAI Diagnosis:")
+    print(diagnosis)
+
 
 def run_remote_monitor(job_id=None):
     """Connect to remote HPC cluster and check Slurm job status."""
@@ -88,7 +106,7 @@ def run_remote_monitor(job_id=None):
     print("\n✓ Remote Slurm check complete")
 
 
-def run_remote_log_monitor(remote_log_path):
+def run_remote_log_monitor(remote_log_path, use_ai=False):
     """Retrieve a remote ASPECT log, save it locally, then analyze it."""
 
     os.makedirs("remote_logs", exist_ok=True)
@@ -104,7 +122,7 @@ def run_remote_log_monitor(remote_log_path):
 
         print("✓ SSH connection successful")
 
-        print(f"\n[1/5] Reading remote ASPECT log:")
+        print("\n[1/5] Reading remote ASPECT log:")
         print(f"  - {remote_log_path}")
 
         reader = RemoteLogReader(connector)
@@ -113,7 +131,11 @@ def run_remote_log_monitor(remote_log_path):
         print(f"  - Saved remote log locally to: {local_log_path}")
 
     print("\n[2/5] Running local analysis on downloaded log...")
-    run_local_monitor(local_log_path)
+    parser_summary, analyzer_summary, report_path = run_local_monitor(local_log_path)
+
+    if use_ai:
+        run_ai_diagnosis(parser_summary, analyzer_summary)
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -155,22 +177,26 @@ def main():
         required=True,
         help="Full remote path to ASPECT log file"
     )
+    remote_log_parser.add_argument(
+        "--ai",
+        action="store_true",
+        help="Enable AI diagnosis after remote log analysis"
+    )
 
     args = parser.parse_args()
 
     if args.mode == "local":
-        run_local_monitor(args.log_file)
+        parser_summary, analyzer_summary, report_path = run_local_monitor(args.log_file)
 
         if args.ai:
-            diagnoser = AIDiagnoser()
-            diagnosis = diagnoser.diagnose(
-                log_summary="Local ASPECT log analyzed successfully.",
-                issue_summary="Use parser and analyzer summary from the generated report."
-            )
-            print("\nAI Diagnosis:")
-            print(diagnosis)
+            run_ai_diagnosis(parser_summary, analyzer_summary)
 
     elif args.mode == "remote":
         run_remote_monitor(args.job_id)
-        if __name__ == "__main__":
+
+    elif args.mode == "remote-log":
+        run_remote_log_monitor(args.path, use_ai=args.ai)
+
+
+if __name__ == "__main__":
     main()
