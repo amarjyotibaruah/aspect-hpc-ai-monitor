@@ -172,6 +172,5 @@ def main():
 
     elif args.mode == "remote":
         run_remote_monitor(args.job_id)
-
-    elif args.mode == "remote-log":
-        run_remote_log_monitor(args.path)
+        if __name__ == "__main__":
+    main()
