@@ -57,7 +57,7 @@ def run_local_monitor(log_file):
     return parser_summary, analyzer_summary, markdown_report_path
 
 
-def run_ai_diagnosis(parser_summary, analyzer_summary):
+def run_ai_diagnosis(parser_summary, analyzer_summary, report_path=None):
     """Run AI diagnosis using parser and analyzer summaries."""
 
     print("\n[AI] Running AI diagnosis...")
@@ -72,7 +72,15 @@ def run_ai_diagnosis(parser_summary, analyzer_summary):
     print("\nAI Diagnosis:")
     print(diagnosis)
 
+    if report_path:
+        with open(report_path, "a") as report_file:
+            report_file.write("\n\n# AI Diagnosis\n\n")
+            report_file.write(diagnosis)
+            report_file.write("\n")
 
+        print(f"\n✓ AI diagnosis added to report: {report_path}")
+
+    return diagnosis
 def run_remote_monitor(job_id=None):
     """Connect to remote HPC cluster and check Slurm job status."""
 
@@ -189,7 +197,7 @@ def main():
         parser_summary, analyzer_summary, report_path = run_local_monitor(args.log_file)
 
         if args.ai:
-            run_ai_diagnosis(parser_summary, analyzer_summary)
+            run_ai_diagnosis(parser_summary, analyzer_summary, report_path)
 
     elif args.mode == "remote":
         run_remote_monitor(args.job_id)
