@@ -11,6 +11,7 @@ from analyzers.simulation_analyzer import SimulationAnalyzer
 from reports.report_generator import ReportGenerator
 from hpc.ssh_connector import SSHConnector
 from hpc.slurm_checker import SlurmChecker
+from hpc.remote_log_reader import RemoteLogReader
 
 
 def run_local_monitor(log_file):
@@ -86,6 +87,34 @@ def run_remote_monitor(job_id=None):
     print("\n✓ Remote Slurm check complete")
 
 
+def run_remote_log_monitor(remote_log_path):
+    """Retrieve a remote ASPECT log, save it locally, then analyze it."""
+
+    os.makedirs("remote_logs", exist_ok=True)
+
+    local_log_path = os.path.join("remote_logs", "remote_log.txt")
+
+    print("Connecting to remote HPC cluster...")
+
+    with SSHConnector() as connector:
+        if not connector.check_connection():
+            print("Error: SSH connection check failed.")
+            sys.exit(1)
+
+        print("✓ SSH connection successful")
+
+        print(f"\n[1/5] Reading remote ASPECT log:")
+        print(f"  - {remote_log_path}")
+
+        reader = RemoteLogReader(connector)
+        reader.save_remote_log_locally(remote_log_path, local_log_path)
+
+        print(f"  - Saved remote log locally to: {local_log_path}")
+
+    print("\n[2/5] Running local analysis on downloaded log...")
+    run_local_monitor(local_log_path)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="ASPECT HPC-AI Monitor"
@@ -112,6 +141,16 @@ def main():
         default=None
     )
 
+    remote_log_parser = subparsers.add_parser(
+        "remote-log",
+        help="Download and analyze a remote ASPECT log file"
+    )
+    remote_log_parser.add_argument(
+        "--path",
+        required=True,
+        help="Full remote path to ASPECT log file, for example /scratch/user/run/output/log.txt"
+    )
+
     args = parser.parse_args()
 
     if args.mode == "local":
@@ -119,6 +158,9 @@ def main():
 
     elif args.mode == "remote":
         run_remote_monitor(args.job_id)
+
+    elif args.mode == "remote-log":
+        run_remote_log_monitor(args.path)
 
 
 if __name__ == "__main__":
