@@ -124,13 +124,18 @@ def main():
     subparsers = parser.add_subparsers(dest="mode", required=True)
 
     local_parser = subparsers.add_parser(
-        "local",
-        help="Analyze a local ASPECT log file"
-    )
-    local_parser.add_argument(
-        "log_file",
-        help="Path to local ASPECT log file"
-    )
+    "local",
+    help="Analyze a local ASPECT log file"
+)
+local_parser.add_argument(
+    "log_file",
+    help="Path to local ASPECT log file"
+)
+local_parser.add_argument(
+    "--ai",
+    action="store_true",
+    help="Enable AI diagnosis"
+)
 
     remote_parser = subparsers.add_parser(
         "remote",
