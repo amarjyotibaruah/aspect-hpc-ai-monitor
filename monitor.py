@@ -115,7 +115,6 @@ def run_remote_log_monitor(remote_log_path):
     print("\n[2/5] Running local analysis on downloaded log...")
     run_local_monitor(local_log_path)
 
-
 def main():
     parser = argparse.ArgumentParser(
         description="ASPECT HPC-AI Monitor"
@@ -124,18 +123,18 @@ def main():
     subparsers = parser.add_subparsers(dest="mode", required=True)
 
     local_parser = subparsers.add_parser(
-    "local",
-    help="Analyze a local ASPECT log file"
-)
-local_parser.add_argument(
-    "log_file",
-    help="Path to local ASPECT log file"
-)
-local_parser.add_argument(
-    "--ai",
-    action="store_true",
-    help="Enable AI diagnosis"
-)
+        "local",
+        help="Analyze a local ASPECT log file"
+    )
+    local_parser.add_argument(
+        "log_file",
+        help="Path to local ASPECT log file"
+    )
+    local_parser.add_argument(
+        "--ai",
+        action="store_true",
+        help="Enable AI diagnosis"
+    )
 
     remote_parser = subparsers.add_parser(
         "remote",
@@ -154,29 +153,25 @@ local_parser.add_argument(
     remote_log_parser.add_argument(
         "--path",
         required=True,
-        help="Full remote path to ASPECT log file, for example /scratch/user/run/output/log.txt"
+        help="Full remote path to ASPECT log file"
     )
 
     args = parser.parse_args()
 
     if args.mode == "local":
-    run_local_monitor(args.log_file)
+        run_local_monitor(args.log_file)
 
-    if args.ai:
-        diagnoser = AIDiagnoser()
-        diagnosis = diagnoser.diagnose(
-            log_summary="Local ASPECT log analyzed successfully.",
-            issue_summary="Use parser and analyzer summary from the generated report."
-        )
-        print("\nAI Diagnosis:")
-        print(diagnosis)
+        if args.ai:
+            diagnoser = AIDiagnoser()
+            diagnosis = diagnoser.diagnose(
+                log_summary="Local ASPECT log analyzed successfully.",
+                issue_summary="Use parser and analyzer summary from the generated report."
+            )
+            print("\nAI Diagnosis:")
+            print(diagnosis)
 
     elif args.mode == "remote":
         run_remote_monitor(args.job_id)
 
     elif args.mode == "remote-log":
         run_remote_log_monitor(args.path)
-
-
-if __name__ == "__main__":
-    main()
