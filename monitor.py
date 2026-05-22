@@ -1,11 +1,12 @@
 """Main monitoring workflow script for aspect-hpc-ai-monitor."""
 
+
 import argparse
 import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
-
+from ai.ai_diagnoser import AIDiagnoser
 from parsers.aspect_log_parser import AspectLogParser
 from analyzers.simulation_analyzer import SimulationAnalyzer
 from reports.report_generator import ReportGenerator
