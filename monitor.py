@@ -6,6 +6,7 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
+from notifications.email_sender import EmailSender
 from ai.ai_diagnoser import AIDiagnoser
 from parsers.aspect_log_parser import AspectLogParser
 from analyzers.simulation_analyzer import SimulationAnalyzer
@@ -81,6 +82,23 @@ def run_ai_diagnosis(parser_summary, analyzer_summary, report_path=None):
         print(f"\n✓ AI diagnosis added to report: {report_path}")
 
     return diagnosis
+
+
+def send_email_report(report_path):
+    """Send generated report by email."""
+
+    print("\n[Email] Sending report...")
+
+    sender = EmailSender()
+    sender.send_report(
+        subject="ASPECT HPC-AI Monitor Report",
+        body="Attached is the latest ASPECT monitoring report.",
+        report_path=report_path,
+    )
+
+    print("✓ Email report sent")
+
+
 def run_remote_monitor(job_id=None):
     """Connect to remote HPC cluster and check Slurm job status."""
 
@@ -142,7 +160,9 @@ def run_remote_log_monitor(remote_log_path, use_ai=False):
     parser_summary, analyzer_summary, report_path = run_local_monitor(local_log_path)
 
     if use_ai:
-        run_ai_diagnosis(parser_summary, analyzer_summary)
+        run_ai_diagnosis(parser_summary, analyzer_summary, report_path)
+
+    return report_path
 
 
 def main():
@@ -164,6 +184,11 @@ def main():
         "--ai",
         action="store_true",
         help="Enable AI diagnosis"
+    )
+    local_parser.add_argument(
+        "--email",
+        action="store_true",
+        help="Email the generated report"
     )
 
     remote_parser = subparsers.add_parser(
@@ -190,6 +215,11 @@ def main():
         action="store_true",
         help="Enable AI diagnosis after remote log analysis"
     )
+    remote_log_parser.add_argument(
+        "--email",
+        action="store_true",
+        help="Email the generated report"
+    )
 
     args = parser.parse_args()
 
@@ -199,11 +229,17 @@ def main():
         if args.ai:
             run_ai_diagnosis(parser_summary, analyzer_summary, report_path)
 
+        if args.email:
+            send_email_report(report_path)
+
     elif args.mode == "remote":
         run_remote_monitor(args.job_id)
 
     elif args.mode == "remote-log":
-        run_remote_log_monitor(args.path, use_ai=args.ai)
+        report_path = run_remote_log_monitor(args.path, use_ai=args.ai)
+
+        if args.email:
+            send_email_report(report_path)
 
 
 if __name__ == "__main__":
