@@ -160,7 +160,16 @@ local_parser.add_argument(
     args = parser.parse_args()
 
     if args.mode == "local":
-        run_local_monitor(args.log_file)
+    run_local_monitor(args.log_file)
+
+    if args.ai:
+        diagnoser = AIDiagnoser()
+        diagnosis = diagnoser.diagnose(
+            log_summary="Local ASPECT log analyzed successfully.",
+            issue_summary="Use parser and analyzer summary from the generated report."
+        )
+        print("\nAI Diagnosis:")
+        print(diagnosis)
 
     elif args.mode == "remote":
         run_remote_monitor(args.job_id)
