@@ -1,21 +1,65 @@
 # aspect-hpc-ai-monitor
 
-A monitoring tool for HPC and AI workloads.
+AI-assisted monitoring and automation framework for ASPECT geodynamic simulations on HPC clusters.
+
+---
 
 ## Overview
 
-This project provides monitoring and tracking capabilities for high-performance computing (HPC) and artificial intelligence (AI) applications.
+`aspect-hpc-ai-monitor` is a Python-based workflow tool designed to automate the monitoring, analysis, and reporting of large-scale ASPECT geodynamic simulations running on HPC systems such as:
 
-## Getting Started
+- Cedar
+- Fir
+- Graham
+- Béluga
+- Niagara
 
-1. Clone the repository
-2. Copy `.env.example` to `.env` and configure your settings
-3. Install dependencies and run
+The framework parses ASPECT log files, detects numerical issues, analyzes solver behavior, monitors Slurm jobs remotely, and generates automated reports for simulation diagnostics.
 
-## Requirements
+---
 
-- Python 3.8+
+## Features
 
-## License
+### Local ASPECT Log Analysis
+- Parse ASPECT `log.txt` files
+- Extract timestep information
+- Detect convergence issues
+- Detect GMRES / FGMRES failures
+- Detect NaN occurrences
+- Detect memory-related issues
+- Generate automated Markdown reports
 
-MIT
+### Remote HPC Monitoring
+- SSH connection to HPC clusters
+- Slurm job monitoring
+- Active job inspection
+- Recent job history tracking
+- Individual job status checking
+
+### Planned Features
+- AI-generated simulation diagnostics
+- Automated recovery suggestions
+- PDF report generation
+- Email notifications
+- Daily scheduled monitoring
+- Automatic remote log retrieval
+- Interactive dashboard
+
+---
+
+# Project Structure
+
+```text
+aspect-hpc-ai-monitor/
+├── monitor.py
+├── README.md
+├── pyproject.toml
+├── .env.example
+├── examples/
+│   └── sample_log.txt
+├── reports/
+├── src/
+│   ├── analyzers/
+│   ├── hpc/
+│   ├── parsers/
+│   └── reports/
