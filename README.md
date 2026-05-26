@@ -2,6 +2,9 @@
 
 AI-assisted monitoring and diagnostic framework for ASPECT geodynamic simulations running on HPC clusters.
 
+<img width="1536" height="1024" alt="ChatGPT Image May 26, 2026, 02_12_43 PM" src="https://github.com/user-attachments/assets/61865871-993f-49cc-8087-df4a57a713f7" />
+
+
 ---
 
 # Overview
